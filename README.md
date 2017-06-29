@@ -10,6 +10,14 @@ A quick and basic Yandex DDNS updater written in Ruby.
 
 ## Usage
 ```sh
+# Copy example config file
+cp config.json.example config.json
+```
+Set `domain` and `pdd_token` values in **config.json**
+
+[An API token for your domain can be obtained here](https://pddimp.yandex.ru/api2/admin/get_token)
+
+```
 # Install bundler
 gem install bundler
 
@@ -24,8 +32,14 @@ chmod +x yandex-ddns && yandex-ddns
 
 ## Useful reads
 - [Yandex DNS hosting](https://yandex.com/support/domain/domain/dns.html)
+- [Yandex.Mail for Domain API / Documentation / API access](https://tech.yandex.com/domain/doc/concepts/access-docpage/)
 - [Yandex.Mail for Domain API / Documentation / Managing DNS](https://tech.yandex.com/domain/doc/concepts/api-dns-docpage/)
 
 ## Alternatives
 - [populov/yandex-ddns-sh](https://github.com/populov/yandex-ddns-sh) **(Shell)**
 - [thekvs/yandex-ddns](https://github.com/thekvs/yandex-ddns) **(Go)**
+
+## License
+**[Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)**
+
+This software comes with no warranties.
