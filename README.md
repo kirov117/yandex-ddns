@@ -17,6 +17,8 @@ Set `domain` and `pdd_token` values in **config.json**
 
 [An API token for your domain can be obtained here](https://pddimp.yandex.ru/api2/admin/get_token)
 
+`last_ip` provides a key for comparing the current and previously set IP addresses. It is modified by the script on each successful run. This is so we don't make useless API calls when the IP hasn't changed.
+
 ```
 # Install bundler
 gem install bundler
