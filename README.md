@@ -27,9 +27,7 @@ gem install bundler
 bundle install
 
 # Run the script
-ruby yandex-ddns
-# OR
-chmod +x yandex-ddns && yandex-ddns
+bundle exec yandex-ddns
 ```
 
 ## Useful reads
