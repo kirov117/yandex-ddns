@@ -1,0 +1,102 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'bundler/setup'
+
+require 'net/http'
+require 'uri'
+require 'json'
+require 'curb'
+require 'pp'
+
+$API_HOST    = 'https://pddimp.yandex.ru'
+$EXT_IP_URL  = 'http://myexternalip.com/raw'
+$CONFIG_PATH = './config.json'
+
+$config = JSON.parse(File.read($CONFIG_PATH))
+
+def getExternalIP
+	Net::HTTP.get(
+		URI.parse($EXT_IP_URL)
+	).gsub("\n", '')
+end
+
+def APICall(endpoint = '/', method = 'GET', params = {})
+	ch = Curl::Easy.new
+
+	callURL = $API_HOST + endpoint
+
+	ch.url            = callURL
+	ch.header_in_body = false
+
+	ch.headers['PddToken'] = $config['pdd_token']
+
+	case method
+	when 'GET'
+		callURL += '?' + Curl::postalize(params)
+		ch.url  = callURL
+
+		ch.http_get
+	when 'POST'
+		ch.http_post(Curl::postalize(params))
+	end
+
+	curlData   = ch.body_str
+	curlStatus = ch.status.to_i()
+
+	ch.close
+	ch = nil
+
+	{
+		'data'   => curlData,
+		'status' => curlStatus
+	}
+end
+
+# Parse DNS records list
+records = JSON.parse(
+	APICall('/api2/admin/dns/list', 'GET', {
+		'domain' => $config['domain']
+	})['data']
+)['records']
+
+# Lookup target record ID (Type: A, Host: @)
+$recordID = nil
+records.each do |r|
+	unless r['type'] == 'A' && r['subdomain'] == '@'
+		next
+	end
+
+	$recordID = r['record_id']; break
+end
+
+# If no record found, exit
+if !$recordID
+	p '`[Type: A, Host: @] DNS record not found!`'
+	exit
+end
+
+# Obtain external IP address
+$externalIP = getExternalIP
+
+# Check if IP address changed since last run
+if $externalIP == $config['last_ip']
+	exit
+else
+	# Update remote record
+	res = JSON.parse(
+		APICall('/api2/admin/dns/edit', 'POST', {
+			'domain'    => $config['domain'],
+			'record_id' => $recordID,
+			'content'   => $externalIP
+		})['data']
+	)['success']
+
+	# On success, update last IP address in config file
+	if res == 'ok'
+		$config['last_ip'] = $externalIP
+		File.open($CONFIG_PATH, 'w') do |f|
+			f.write(JSON.pretty_generate($config))
+		end
+	end
+end
