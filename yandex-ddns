@@ -53,6 +53,14 @@ def APICall(endpoint = '/', method = 'GET', params = {})
 	}
 end
 
+# Obtain external IP address
+$externalIP = getExternalIP
+
+# Exit if IP address hasn't changed since last run
+if $externalIP == $config['last_ip']
+	exit
+end
+
 # Parse DNS records list
 records = JSON.parse(
 	APICall('/api2/admin/dns/list', 'GET', {
@@ -60,43 +68,39 @@ records = JSON.parse(
 	})['data']
 )['records']
 
-# Lookup target record ID (Type: A, Host: @)
-$recordID = nil
+# Lookup target record (Type: A, Host: @)
+$record = nil
 records.each do |r|
 	unless r['type'] == 'A' && r['subdomain'] == '@'
 		next
 	end
 
-	$recordID = r['record_id']; break
+	$record = r; break
 end
 
 # If no record found, exit
-if !$recordID
+if !$record
 	p '`[Type: A, Host: @] DNS record not found!`'
 	exit
 end
 
-# Obtain external IP address
-$externalIP = getExternalIP
-
-# Check if IP address changed since last run
-if $externalIP == $config['last_ip']
-	exit
+# If remote IP address differs, update record
+if $externalIP == $record['content']
+	res = 'ok'
 else
-	# Update remote record
 	res = JSON.parse(
 		APICall('/api2/admin/dns/edit', 'POST', {
 			'domain'    => $config['domain'],
-			'record_id' => $recordID,
+			'record_id' => $record['record_id'],
 			'content'   => $externalIP
 		})['data']
 	)['success']
+end
 
-	# On success, update last IP address in config file
-	if res == 'ok'
-		$config['last_ip'] = $externalIP
-		File.open($CONFIG_PATH, 'w') do |f|
-			f.write(JSON.pretty_generate($config))
-		end
+# On success, update last IP address in config file
+if res == 'ok'
+	$config['last_ip'] = $externalIP
+	File.open($CONFIG_PATH, 'w') do |f|
+		f.write(JSON.pretty_generate($config))
 	end
 end
