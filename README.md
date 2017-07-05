@@ -30,6 +30,9 @@ bundle install
 bundle exec yandex-ddns
 ```
 
+## Scheduling
+// TODO (cron & systemd)
+
 ## Useful reads
 - [Yandex DNS hosting](https://yandex.com/support/domain/domain/dns.html)
 - [Yandex.Mail for Domain API / Documentation / API access](https://tech.yandex.com/domain/doc/concepts/access-docpage/)
