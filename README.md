@@ -24,7 +24,7 @@ Set `domain` and `pdd_token` values in **config.json**
 gem install bundler
 
 # Install dependencies
-bundle install
+bundle install --path vendor/bundle
 
 # Run the script
 bundle exec yandex-ddns
